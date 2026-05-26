@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StarLight</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #050505;
+    }
+
+    canvas {
+      touch-action: none;
+    }
+  </style>
+  <script>
+    (function () {
+      var baseUrl = new URL('.', window.location.href);
+      var basePath = baseUrl.pathname;
+      window.__starlightBaseUrl = baseUrl.toString();
+      window.__starlightPathname = function () {
+        var path = window.location.pathname;
+        if (basePath !== '/' && path.indexOf(basePath) === 0) {
+          var relativePath = path.slice(basePath.length);
+          return relativePath ? '/' + relativePath.replace(/^\/+/, '') : '/';
+        }
+        return path;
+      };
+      function localAsset(path) {
+        return new URL(path.replace(/^\/+/, ''), baseUrl).toString();
+      }
+      const rules = [{
+          test: function (url) {
+            return typeof url === 'string' && url.indexOf(
+              'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm/') === 0;
+          },
+          rewrite: function (url) {
+            return url.replace('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm/', localAsset('assets/'));
+          }
+        },
+        {
+          test: function (url) {
+            return typeof url === 'string' &&
+              /raw\.githack\.com\/pmndrs\/drei-assets\/.+\/hdri\/potsdamer_platz_1k\.hdr/.test(url);
+          },
+          rewrite: function (url) {
+            return localAsset('assets/potsdamer_platz_1k.hdr');
+          }
+        },
+        {
+          test: function (url) {
+            return typeof url === 'string' && url.indexOf('/assets/') === 0;
+          },
+          rewrite: function (url) {
+            return localAsset(url);
+          }
+        }
+      ];
+
+      function rewriteUrl(url) {
+        for (var i = 0; i < rules.length; i++) {
+          if (rules[i].test(url)) return rules[i].rewrite(url);
+        }
+        return null;
+      }
+
+      var originalFetch = window.fetch;
+      window.fetch = function (input, init) {
+        try {
+          var url = typeof input === 'string' ? input : (input && input.url);
+          var newUrl = url ? rewriteUrl(url) : null;
+          if (newUrl) {
+            if (typeof input === 'string') {
+              input = newUrl;
+            } else if (input instanceof Request) {
+              input = new Request(newUrl, input);
+            }
+          }
+        } catch (e) {}
+        return originalFetch.apply(this, arguments);
+      };
+
+      var originalOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
+        try {
+          var newUrl = typeof url === 'string' ? rewriteUrl(url) : null;
+          if (newUrl) url = newUrl;
+        } catch (e) {}
+        return originalOpen.call(this, method, url, async, user, password);
+      };
+      // var originalWorker = window.Worker;
+      // window.Worker = function (scriptURL, options) {
+      //   var newUrl = typeof scriptURL === 'string' ? rewriteUrl(scriptURL) : null;
+      //   return new originalWorker(newUrl || scriptURL, options);
+      // };
+
+      // var originalCreateElement = document.createElement;
+      // document.createElement = function (tagName, options) {
+      //   var element = originalCreateElement.call(document, tagName, options);
+      //   if (tagName.toLowerCase() === 'script') {
+      //     var originalSetAttribute = element.setAttribute;
+      //     element.setAttribute = function (name, value) {
+      //       if (name.toLowerCase() === 'src') {
+      //         var newUrl = rewriteUrl(value);
+      //         if (newUrl) value = newUrl;
+      //       }
+      //       return originalSetAttribute.call(this, name, value);
+      //     };
+      //     Object.defineProperty(element, 'src', {
+      //       set: function (value) {
+      //         var newUrl = rewriteUrl(value);
+      //         this.setAttribute('src', newUrl || value);
+      //       },
+      //       get: function () {
+      //         return this.getAttribute('src');
+      //       }
+      //     });
+      //   }
+      //   return element;
+      // };
+    })();
+  </script>
+  <script defer src="./starlight-share-config.js"></script>
+  <script defer src="./starlight-cleanup.js"></script>
+  <script type="module">
+    if (window.__starlightShareReady) {
+      await window.__starlightShareReady;
+    }
+
+    const sourceUrl = new URL('./assets/index-D0gABIbm.js', import.meta.url);
+    const source = await fetch(sourceUrl).then((response) => {
+      if (!response.ok) throw new Error(`Failed to load StarLight bundle: ${response.status}`);
+      return response.text();
+    });
+    const patchedSource = source.replaceAll('window.location.pathname', 'window.__starlightPathname()');
+    const blobUrl = URL.createObjectURL(new Blob([patchedSource], { type: 'text/javascript' }));
+    await import(blobUrl);
+  </script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DaSapoV3.css">
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>
