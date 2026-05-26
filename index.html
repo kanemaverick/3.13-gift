@@ -130,7 +130,7 @@
       await window.__starlightShareReady;
     }
 
-    const sourceUrl = new URL('./assets/index-D0gABIbm.js', import.meta.url);
+    const sourceUrl = new URL('./assets/index-D0gABIbm.js?v=337e394', import.meta.url);
     const source = await fetch(sourceUrl).then((response) => {
       if (!response.ok) throw new Error(`Failed to load StarLight bundle: ${response.status}`);
       return response.text();
