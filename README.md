@@ -12,7 +12,9 @@ https://star.imhjm.com/
 - `assets/hand_landmarker.task` - MediaPipe hand landmark model
 - `assets/vision_wasm_internal.js` and `assets/vision_wasm_internal.wasm` - MediaPipe runtime files used by the page
 - `assets/potsdamer_platz_1k.hdr` - HDR environment asset
+- `assets/photos/` - bundled photo assets exported from the local browser copy
 - `assets/rednote.png` and `assets/wechat_pay.png` - public image assets referenced by the bundle
+- `_headers` - Cloudflare Pages headers for WASM/model MIME types and static caching
 - `starlight-share-config.js` - optional Supabase configuration for invite-code sharing
 - `starlight-cleanup.js` - local helper script that removes sponsor UI, adds invite-code sharing, and adds a cake-shape button
 
@@ -29,6 +31,17 @@ This is a public frontend mirror only. The JavaScript bundle is minified product
 The added share button can create invite links such as `?invite=ABCDEFGH` when `starlight-share-config.js` is configured with your own Supabase project. If Supabase is not configured, it falls back to a static `?c=` configuration link.
 
 GitHub Pages project URLs such as `https://user.github.io/repo/` are supported by the local wrapper in `index.html`; it rewrites asset paths and prevents the app from mistaking `/repo/` for a remote short-link path.
+
+## Cloudflare Pages deployment
+
+Use GitHub as the source repository and Cloudflare Pages as the public host:
+
+- Framework preset: `None`
+- Build command: leave empty
+- Build output directory: `/`
+- Root directory: repository root
+
+Cloudflare Pages serves the static files directly. The `_headers` file configures long-lived cache headers for assets and explicit MIME types for the MediaPipe WASM/model files.
 
 ## Invite sharing setup
 

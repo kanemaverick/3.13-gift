@@ -1,0 +1,13 @@
+/assets/vision_wasm_internal.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/hand_landmarker.task
+  Content-Type: application/octet-stream
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  Cache-Control: public, max-age=300

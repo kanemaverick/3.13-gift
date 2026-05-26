@@ -2,6 +2,29 @@
   const CONFIG_KEY = "arix_tree_config_v1";
   const LOCAL_IMAGES_KEY = "arix_tree_images_v1";
   const DEFAULT_SHARE_TABLE = "starlight_shares";
+  const DEFAULT_PHOTO_FILES = [
+    "photo-01.jpg",
+    "photo-02.jpg",
+    "photo-03.jpg",
+    "photo-04.jpg",
+    "photo-05.jpg",
+    "photo-06.jpg",
+    "photo-07.jpg",
+    "photo-08.jpg",
+    "photo-09.jpg",
+    "photo-10.jpg",
+    "photo-11.jpg",
+    "photo-12.jpg",
+    "photo-13.jpg",
+    "photo-14.jpg",
+    "photo-15.jpg",
+    "photo-16.jpg",
+    "photo-17.jpg",
+    "photo-18.jpg",
+    "photo-19.jpg",
+    "photo-20.jpg",
+    "photo-21.jpg",
+  ];
 
   const sponsorKeywords = [
     "赞助",
@@ -87,6 +110,64 @@
     } catch {
       return fallback;
     }
+  }
+
+  function writeJsonStorage(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function shouldUseLiteMode() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("quality") === "lite" || params.get("lite") === "1";
+  }
+
+  function applyLiteDefaults() {
+    if (!shouldUseLiteMode()) return;
+
+    const config = readJsonStorage(CONFIG_KEY, {});
+    const currentCounts = config.treeCounts || {};
+    const currentPerformance = config.performanceConfig || {};
+    const nextConfig = {
+      ...config,
+      treeCounts: {
+        needles: Math.min(Number(currentCounts.needles) || 1800, 1800),
+        ornaments: Math.min(Number(currentCounts.ornaments) || 250, 250),
+        cubes: Math.min(Number(currentCounts.cubes) || 300, 300),
+      },
+      performanceConfig: {
+        ...currentPerformance,
+        enablePostProcessing: false,
+        bloomIntensity: Math.min(Number(currentPerformance.bloomIntensity) || 0.8, 0.8),
+        starsCount: Math.min(Number(currentPerformance.starsCount) || 1200, 1200),
+        devicePixelRatio: Math.min(Number(currentPerformance.devicePixelRatio) || 1, 1),
+        antialias: false,
+      },
+      photoSize: Math.min(Number(config.photoSize) || 1.5, 1.5),
+    };
+
+    writeJsonStorage(CONFIG_KEY, nextConfig);
+  }
+
+  function bundledPhotoUrls() {
+    const baseUrl = new URL(window.__starlightBaseUrl || ".", window.location.href);
+    return DEFAULT_PHOTO_FILES.map((name) => new URL(`assets/photos/${name}`, baseUrl).toString());
+  }
+
+  function applyBundledPhotos() {
+    if (!DEFAULT_PHOTO_FILES.length) return;
+
+    const config = readJsonStorage(CONFIG_KEY, {});
+    const hasImages = Array.isArray(config.imageUrls) && config.imageUrls.length > 0;
+    const hasLocalImages = Array.isArray(config.localImages) && config.localImages.length > 0;
+    const storedLocalImages = readJsonStorage(LOCAL_IMAGES_KEY, []);
+
+    if (hasImages || hasLocalImages || storedLocalImages.length > 0) return;
+
+    writeJsonStorage(CONFIG_KEY, {
+      ...config,
+      imageUrls: bundledPhotoUrls(),
+    });
+    localStorage.removeItem(LOCAL_IMAGES_KEY);
   }
 
   function buildShareConfig() {
@@ -330,6 +411,9 @@
   window.__starlightShareReady = hydrateInviteFromUrl().catch((error) => {
     window.__starlightInviteError = error instanceof Error ? error.message : String(error);
     console.error("Failed to load invite config", error);
+  }).finally(() => {
+    applyBundledPhotos();
+    applyLiteDefaults();
   });
 
   if (document.readyState === "loading") {

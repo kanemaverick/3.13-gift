@@ -57,6 +57,14 @@
           rewrite: function (url) {
             return localAsset(url);
           }
+        },
+        {
+          test: function (url) {
+            return typeof url === 'string' && url.indexOf(window.location.origin + '/assets/') === 0;
+          },
+          rewrite: function (url) {
+            return localAsset(new URL(url).pathname);
+          }
         }
       ];
 
@@ -97,30 +105,30 @@
       //   return new originalWorker(newUrl || scriptURL, options);
       // };
 
-      // var originalCreateElement = document.createElement;
-      // document.createElement = function (tagName, options) {
-      //   var element = originalCreateElement.call(document, tagName, options);
-      //   if (tagName.toLowerCase() === 'script') {
-      //     var originalSetAttribute = element.setAttribute;
-      //     element.setAttribute = function (name, value) {
-      //       if (name.toLowerCase() === 'src') {
-      //         var newUrl = rewriteUrl(value);
-      //         if (newUrl) value = newUrl;
-      //       }
-      //       return originalSetAttribute.call(this, name, value);
-      //     };
-      //     Object.defineProperty(element, 'src', {
-      //       set: function (value) {
-      //         var newUrl = rewriteUrl(value);
-      //         this.setAttribute('src', newUrl || value);
-      //       },
-      //       get: function () {
-      //         return this.getAttribute('src');
-      //       }
-      //     });
-      //   }
-      //   return element;
-      // };
+      var originalCreateElement = document.createElement;
+      document.createElement = function (tagName, options) {
+        var element = originalCreateElement.call(document, tagName, options);
+        if (String(tagName).toLowerCase() === 'script') {
+          var originalSetAttribute = element.setAttribute;
+          element.setAttribute = function (name, value) {
+            if (String(name).toLowerCase() === 'src') {
+              var newUrl = rewriteUrl(value);
+              if (newUrl) value = newUrl;
+            }
+            return originalSetAttribute.call(this, name, value);
+          };
+          Object.defineProperty(element, 'src', {
+            set: function (value) {
+              var newUrl = rewriteUrl(value);
+              this.setAttribute('src', newUrl || value);
+            },
+            get: function () {
+              return this.getAttribute('src');
+            }
+          });
+        }
+        return element;
+      };
     })();
   </script>
   <script defer src="./starlight-share-config.js"></script>
@@ -130,7 +138,7 @@
       await window.__starlightShareReady;
     }
 
-    const sourceUrl = new URL('./assets/index-D0gABIbm.js?v=337e394', import.meta.url);
+    const sourceUrl = new URL('./assets/index-D0gABIbm.js?v=cf-full-photos', import.meta.url);
     const source = await fetch(sourceUrl).then((response) => {
       if (!response.ok) throw new Error(`Failed to load StarLight bundle: ${response.status}`);
       return response.text();
