@@ -2,28 +2,41 @@
   const CONFIG_KEY = "arix_tree_config_v1";
   const LOCAL_IMAGES_KEY = "arix_tree_images_v1";
   const DEFAULT_SHARE_TABLE = "starlight_shares";
+  const SHOW_HELPER_BUTTONS = false;
   const DEFAULT_PHOTO_FILES = [
-    "photo-01.jpg",
-    "photo-02.jpg",
-    "photo-03.jpg",
-    "photo-04.jpg",
-    "photo-05.jpg",
-    "photo-06.jpg",
-    "photo-07.jpg",
-    "photo-08.jpg",
-    "photo-09.jpg",
-    "photo-10.jpg",
-    "photo-11.jpg",
-    "photo-12.jpg",
-    "photo-13.jpg",
-    "photo-14.jpg",
-    "photo-15.jpg",
-    "photo-16.jpg",
-    "photo-17.jpg",
-    "photo-18.jpg",
-    "photo-19.jpg",
-    "photo-20.jpg",
-    "photo-21.jpg",
+    "0fde80f37abe71ba2377905bf950b3dd.jpg",
+    "1567974fb26b9478060df359672a5d77.jpg",
+    "16c801e732b25398ea18b80f741c770a.jpg",
+    "268be4804f7515052df5f43a63ee5e63.jpg",
+    "29d3e6bb658682036fc2d04abaa196bc.jpg",
+    "3430b7c0883c1811e29c4df3e0d189c3.jpg",
+    "358d06cf2a8f91efdef36bc3dbe4c557.jpg",
+    "3df3748142433cf466eab524be9edbfc.jpg",
+    "3ea76a8b6e3bc5f85289a5cf9ad3863d.jpg",
+    "469ac0667976cdaa8bebd2916191a5ae.jpg",
+    "4e3263a65bb8691178f0c18340a21885.jpg",
+    "4f7b2905650fe87dc96cc24c9f183cba.jpg",
+    "536518958390734564520463862016b8.jpg",
+    "569d95f062442c78318c536fa7a0240d.jpg",
+    "5bb04e056ba5b391af72fc001726dfae.jpg",
+    "5e04bb6f3d5373f538ffb3d531c9cad9.jpg",
+    "5e5fa7d769c2c850afc1058ba9733744.jpg",
+    "68ae0ac72e6cf329e891e04ed5be437a.jpg",
+    "6f661b61c51d1a539e738df6b2ab24b1.jpg",
+    "77c2bc645b61768310dbeec008da164e.jpg",
+    "8aa68be347a28ed47a65fc93fbdc0a83.jpg",
+    "9beb6ff16392bd7cb99463f8ccf96522.jpg",
+    "a2fc07b2f6483da15769c567894c2e92.jpg",
+    "a4e387d17e44f77972d386c4027ae969.jpg",
+    "afa8c8a06834869288d18d0a318b39aa.jpg",
+    "b4a6c28dcd0a0d6a41847791978417ca.jpg",
+    "b8c0f9faa3d58f27308053e888be9bd9.jpg",
+    "c81d54c5b1c8a91074870f6416cb4504.jpg",
+    "cacd181824a652217a14d49e0898074b.jpg",
+    "d9d9279f9d6f170a990b9f4a9eea808f.jpg",
+    "de568ab23c4fedd05644fe8e91dd0f9e.jpg",
+    "f05dd10e7b55842ea2d3971e62a4a958.jpg",
+    "f7ed2ef7d23e6ab7a210877fb45cfea9.jpg",
   ];
 
   const sponsorKeywords = [
@@ -157,12 +170,6 @@
     if (!DEFAULT_PHOTO_FILES.length) return;
 
     const config = readJsonStorage(CONFIG_KEY, {});
-    const hasImages = Array.isArray(config.imageUrls) && config.imageUrls.length > 0;
-    const hasLocalImages = Array.isArray(config.localImages) && config.localImages.length > 0;
-    const storedLocalImages = readJsonStorage(LOCAL_IMAGES_KEY, []);
-
-    if (hasImages || hasLocalImages || storedLocalImages.length > 0) return;
-
     writeJsonStorage(CONFIG_KEY, {
       ...config,
       imageUrls: bundledPhotoUrls(),
@@ -418,12 +425,16 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", cleanupSponsors, { once: true });
-    document.addEventListener("DOMContentLoaded", installLocalShareButton, { once: true });
-    document.addEventListener("DOMContentLoaded", installCakeButton, { once: true });
+    if (SHOW_HELPER_BUTTONS) {
+      document.addEventListener("DOMContentLoaded", installLocalShareButton, { once: true });
+      document.addEventListener("DOMContentLoaded", installCakeButton, { once: true });
+    }
   } else {
     cleanupSponsors();
-    installLocalShareButton();
-    installCakeButton();
+    if (SHOW_HELPER_BUTTONS) {
+      installLocalShareButton();
+      installCakeButton();
+    }
   }
 
   new MutationObserver(scheduleCleanup).observe(document.documentElement, {
