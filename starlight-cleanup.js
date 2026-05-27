@@ -3,6 +3,8 @@
   const LOCAL_IMAGES_KEY = "arix_tree_images_v1";
   const DEFAULT_SHARE_TABLE = "starlight_shares";
   const SHOW_HELPER_BUTTONS = false;
+  const FIXED_TITLE_TEXT = "2026 Happy Birthday";
+  const FIXED_SUBTITLE_TEXT = "送给性格特别好的好朋友孙亦姗";
   const DEFAULT_PHOTO_FILES = [
     "0fde80f37abe71ba2377905bf950b3dd.jpg",
     "1567974fb26b9478060df359672a5d77.jpg",
@@ -135,13 +137,26 @@
   }
 
   function applyLiteDefaults() {
-    if (!shouldUseLiteMode()) return;
-
     const config = readJsonStorage(CONFIG_KEY, {});
     const currentCounts = config.treeCounts || {};
     const currentPerformance = config.performanceConfig || {};
+    const fixedTitleConfig = {
+      titleText: FIXED_TITLE_TEXT,
+      subtitleText: FIXED_SUBTITLE_TEXT,
+      showSubtitle: true,
+    };
+
+    if (!shouldUseLiteMode()) {
+      writeJsonStorage(CONFIG_KEY, {
+        ...config,
+        ...fixedTitleConfig,
+      });
+      return;
+    }
+
     const nextConfig = {
       ...config,
+      ...fixedTitleConfig,
       treeCounts: {
         needles: Math.min(Number(currentCounts.needles) || 1800, 1800),
         ornaments: Math.min(Number(currentCounts.ornaments) || 250, 250),
@@ -370,9 +385,9 @@
       ...config,
       targetShape: "CUSTOM",
       customShapeText: "\uD83C\uDF82",
-      titleText: config.titleText || "Happy Birthday",
-      subtitleText: config.subtitleText || "愿望都发光",
-      showSubtitle: config.showSubtitle !== false,
+      titleText: FIXED_TITLE_TEXT,
+      subtitleText: FIXED_SUBTITLE_TEXT,
+      showSubtitle: true,
     };
 
     localStorage.setItem(CONFIG_KEY, JSON.stringify(nextConfig));
@@ -395,6 +410,59 @@
 
     button.addEventListener("click", () => applyCakeShape(button));
     document.body.appendChild(button);
+  }
+
+  function lockFixedTitleControls(root = document) {
+    const labels = Array.from(root.querySelectorAll("span, label, div")).filter((node) => {
+      const text = (node.textContent || "").trim();
+      return text === "标题文字" || text === "子标题文字";
+    });
+
+    labels.forEach((label) => {
+      const block = label.closest(".flex.flex-col") || label.parentElement;
+      const input = block && block.querySelector("input[type='text']");
+      if (!input) return;
+
+      const isSubtitle = (label.textContent || "").includes("子标题");
+      const fixedValue = isSubtitle ? FIXED_SUBTITLE_TEXT : FIXED_TITLE_TEXT;
+      if (input.value !== fixedValue) {
+        input.value = fixedValue;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      input.readOnly = true;
+      input.title = "这版展示页已固定标题文案";
+      input.style.opacity = "0.72";
+      input.style.cursor = "not-allowed";
+
+      const checkbox = block && block.querySelector("input[type='checkbox']");
+      if (checkbox) {
+        checkbox.checked = true;
+        checkbox.disabled = true;
+        checkbox.title = "副标题已固定显示";
+      }
+    });
+  }
+
+  function installStableTabletViewport() {
+    if (document.getElementById("starlight-stable-tablet-viewport")) return;
+
+    const style = document.createElement("style");
+    style.id = "starlight-stable-tablet-viewport";
+    style.textContent = `
+      @media (min-width: 768px) and (max-width: 1180px) {
+        html, body, #root {
+          min-width: 1180px;
+          overflow-x: auto;
+          background: #000;
+        }
+
+        body {
+          touch-action: pan-x pan-y;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   async function hydrateInviteFromUrl() {
@@ -425,12 +493,16 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", cleanupSponsors, { once: true });
+    document.addEventListener("DOMContentLoaded", () => lockFixedTitleControls(), { once: true });
+    document.addEventListener("DOMContentLoaded", installStableTabletViewport, { once: true });
     if (SHOW_HELPER_BUTTONS) {
       document.addEventListener("DOMContentLoaded", installLocalShareButton, { once: true });
       document.addEventListener("DOMContentLoaded", installCakeButton, { once: true });
     }
   } else {
     cleanupSponsors();
+    lockFixedTitleControls();
+    installStableTabletViewport();
     if (SHOW_HELPER_BUTTONS) {
       installLocalShareButton();
       installCakeButton();
@@ -438,6 +510,11 @@
   }
 
   new MutationObserver(scheduleCleanup).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  new MutationObserver(() => lockFixedTitleControls()).observe(document.documentElement, {
     childList: true,
     subtree: true,
   });
